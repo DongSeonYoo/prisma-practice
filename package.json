@@ -20,6 +20,7 @@
     "@types/node": "^20.10.6",
     "@types/pg": "^8.10.9",
     "cookie-parser": "^1.4.6",
+    "prisma-case-format": "^2.2.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
