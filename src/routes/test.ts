@@ -1,63 +1,61 @@
-import { PrismaClient } from '@prisma/client';
 import { NextFunction, Router, Response, Request } from 'express';
 import { BadRequestException, NotFoundException } from '../utils/modules/custom-error';
 import { ResponseEntity } from '../utils/modules/response-entity';
 import { validate } from '../utils/modules/validater';
 import asyncWrap from '../utils/modules/async-wrap';
+import { prismaClient } from '../../prisma/prisma.client';
+import { Prisma } from '@prisma/client';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 /**
- * GET /test/posts
+ * POST /test/account
+ * 테스트 유저 생성
  */
-router.get('/post-count', async (req: Request, res: Response, next: NextFunction) => {
-  const count = await prisma.post_tb.count();
-
-  return res.send(ResponseEntity.SUCCESS_WITH({ count }));
-});
-
-router.get(
-  '/post/:postId',
+router.post(
+  '/account',
   asyncWrap(async (req: Request, res: Response, next: NextFunction) => {
-    const { postId } = req.params;
-
-    validate(postId, 'postId').checkInput().isNumber();
-
-    const post = await prisma.post_tb.findUnique({
-      where: {
-        id: parseInt(postId),
+    const createdResult = await prismaClient.account.create({
+      data: {
+        loginId: 'test1',
+        password: 'qwerqwerqwerqwerqwer',
+        email: 'test1@naver.com',
+        name: 'test1Name',
+        phoneNumber: '01011111111',
+        profileImg: 'profile.img',
+      },
+      select: {
+        id: true,
       },
     });
 
-    if (!post) {
-      throw new NotFoundException('해당하는 게시글이 존재하지 않습니다');
-    }
-
-    return res.send(ResponseEntity.SUCCESS_WITH(post));
+    return res.send(ResponseEntity.SUCCESS_WITH(createdResult));
   }),
 );
 
-// 100개 insert
+/**
+ * POST /test/post/push
+ * 100개 insert
+ */
 router.post(
-  '/push',
+  '/posts/push',
   asyncWrap(async (req: Request, res: Response, next: NextFunction) => {
     for (let i = 1; i <= 100; i++) {
-      await prisma.post_tb.create({
+      await prismaClient.post.create({
         data: {
-          user_id: 11,
+          accountId: 1,
           title: `title ${i}`,
           content: `content ${i}`,
         },
       });
     }
 
-    return res.send('success');
+    return res.send(ResponseEntity.SUCCESS());
   }),
 );
 
 // throw error test
-router.get(
+router.post(
   '/error',
   asyncWrap(async (req: Request, res: Response, next: NextFunction) => {
     throw new BadRequestException('Error');
